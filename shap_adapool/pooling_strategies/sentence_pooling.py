@@ -9,10 +9,10 @@ from functools import reduce, partial
 from io import StringIO
 import regex_spm
 
-from .initializer import init
-from .pooler import shap_value_pooler, two_element_sum
-from .token_concatenation import add_strings, sentence_concat
-from .plotting import save_plot
+from ..initializer import init
+from ..pooler import shap_value_pooler, two_element_sum
+from ..token_concatenation import add_strings, sentence_concat
+from ..plotting import save_plot
 
 
 def main():

@@ -1,0 +1,6 @@
+# Generated files:
+results
+
+# Python:
+__pycache__
+*.egg-info

@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "shap-adapool"
+version = "0.1.0"
+description = "Adaptive pooling for Shapley Values"
+authors = ["Chris Czarnecki <cczarnec@uwaterloo.ca>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "shap_adapool"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+numpy = "^1.26.3"
+pandas = "^2.2.0"
+shap = "^0.44.1"
+matplotlib = "^3.8.2"
+regex-spm = "^1.0.0"
+
+[tool.poetry.group.dev.dependencies]
+pylint = "^3.0.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

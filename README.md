@@ -6,7 +6,7 @@ We explore different strategies of pooling Shapley Values into:
 
 - [x] sentences
 - [ ] k-word phrases
-- [ ] language-syntax-tree-defined phrases
+- [/] language-syntax-tree-defined phrases
 - [ ] adaptively-defined phrases
 
 ## Installation
@@ -15,6 +15,7 @@ This project uses the [Poetry Package Manager](https://python-poetry.org/) and t
 
 1. Build the package: `poetry build`
 2. Find the wheel in the `dist` folder and install the wheel with `pip`: `pip install <path-to-wheel>`
+3. Because some methods here rely on SpaCy providing the dependency tree, you will need to download the SpaCy pipeline for the English language: `python -m spacy download en_core_web_sm`
 
 > [!warning]
 > At least Python 3.10 is required for this package to work. We profusely use functional programming concepts such as structural pattern matching and some of these facilities are only available in Python 3.10 and newer.
@@ -38,7 +39,14 @@ TODO
 
 ### LST Pooling
 
-TODO
+Language Syntax Tree Pooling relies on the traversal of a syntax tree and formation of phrases defined on that tree:
+
+```bash
+python -m shap_adapool.pooling_strategies.syntax_tree_pooling
+```
+
+> [!note]
+> For now the module only prints out a syntax tree for a predefined sentence. We will soon implement the pooling strategy fully.
 
 ### Adaptive Pooling
 

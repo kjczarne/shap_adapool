@@ -1,0 +1,28 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug",
+            "type": "python",
+            "request": "launch",
+            "module": "shap_adapool.pooling_strategies.${input:strategyModule}",
+            "justMyCode": true
+        }
+    ],
+    "inputs": [
+        {
+            "type": "pickString",
+            "id": "strategyModule",
+            "description": "Pick an option:",
+            "options": [
+                "k_word_pooling",
+                "sentence_pooling",
+                "syntax_tree_pooling"
+            ],
+            "default": "foo"
+        }
+    ]
+}

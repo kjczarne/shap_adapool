@@ -29,3 +29,22 @@ def sentence_concat(array: NDArray[TokenDtype]) -> (NDArray[PhraseDtype], NDArra
                 token_buffer.write(token)
     index_map.append(-1)  # indicates the end of the array
     return sentences, index_map
+
+def kWord_concat(array: NDArray[TokenDtype], k: int) -> (NDArray[PhraseDtype], NDArray[IdxDtype]):
+    sentences = []
+    token_buffer = StringIO()
+    index_map = []
+    idx = 0
+    i = 1
+    for token in array:
+        index_map.append(idx)
+        if i % k == 0:
+            token_buffer.write(token)
+            sentences.append(token_buffer.getvalue())
+            token_buffer = StringIO()  # reset buffer
+            idx += 1
+        else:
+            token_buffer.write(token)
+        i += 1
+    index_map.append(-1)  # indicates the end of the array
+    return sentences, index_map

@@ -41,3 +41,18 @@ def shap_value_pooler(values: NDArray[ShapValueDtype],
         if index_map[idx] != index_map[idx + 1]:
             yield agg
             agg = baseline_value  # reset accumulator
+
+def shap_phrase_pooler(values: NDArray[ShapValueDtype],
+                      index_map: NDArray[np.int64],
+                      aggregate_fn: Callable[[ShapValueDtype, ShapValueDtype], ShapValueDtype] = two_element_sum,
+                      baseline_value: int = 0):
+
+    agg = baseline_value
+    for idx, value in enumerate(values):
+        agg = aggregate_fn(value, agg)
+        if index_map[idx + 1] == -1:
+            yield agg
+            break
+        if index_map[idx] != index_map[idx + 1]:
+            yield agg
+            agg = baseline_value  # reset accumulator

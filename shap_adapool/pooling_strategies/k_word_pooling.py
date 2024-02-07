@@ -10,7 +10,7 @@ from io import StringIO
 import regex_spm
 
 from ..initializer import init
-from ..pooler import shap_value_pooler, two_element_sum
+from ..pooler import shap_phrase_pooler, two_element_sum
 from ..token_concatenation import add_strings, kWord_concat
 from ..plotting import save_plot
 
@@ -24,19 +24,18 @@ def main():
         shap_values = pickle.load(f)
 
 
-    sentences, sentence_indices = kWord_concat(shap_values.data[0], 5)
+    phrases, phrase_indices = kWord_concat(shap_values.data[0], 5)
 
-    values = shap_value_pooler(shap_values.values[0],
-                               sentence_indices,
+    values = shap_phrase_pooler(shap_values.values[0],
+                               phrase_indices,
                                two_element_sum)
 
     # shap.plots.text(shap_values=)
     exp = shap._explanation.Explanation(values=np.array(list(values))[None, :],  # need to add batch dimension
                                         base_values=np.array([shap_values.base_values[0]]),
-                                        data=((list(sentences),)))  # a 1-element tuple
+                                        data=((list(phrases),)))  # a 1-element tuple
 
     print(exp)
-
     single_sample_plotting_functions = [
         ("text", partial(shap.plots.text, display=False)),
     ]

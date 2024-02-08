@@ -16,6 +16,7 @@ from ..plotting import save_plot
 
 
 def main():
+    k:int = int(input("Input the value for k: "))
 
     init()
     # importing the shapley values from a pickle file to save some time
@@ -24,7 +25,7 @@ def main():
         shap_values = pickle.load(f)
 
 
-    phrases, phrase_indices = kWord_concat(shap_values.data[0], 5)
+    phrases, phrase_indices = kWord_concat(shap_values.data[0], k)
 
     values = shap_phrase_pooler(shap_values.values[0],
                                phrase_indices,

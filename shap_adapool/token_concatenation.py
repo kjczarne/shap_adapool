@@ -23,6 +23,7 @@ def token_concat(array: NDArray[TokenDtype],
                  write_condition: ConditionFunction,
                  end_condition: ConditionFunction,
                  add_whitespace: bool = False,
+                 flush_buffer_on_end: bool = False,
                  *args,
                  **kwargs) -> (NDArray[PhraseDtype], NDArray[IdxDtype]):
     token_buffer = StringIO()
@@ -36,10 +37,17 @@ def token_concat(array: NDArray[TokenDtype],
             if add_whitespace:
                 token_buffer.write(" ")
         if end_condition(token, idx=positional_idx, *args, **kwargs):
-            token_buffer.write(str(token))
             concatenated_token_array.append(token_buffer.getvalue())
             token_buffer = StringIO()  # reset buffer
             idx += 1
+    # For some applications such as syntax-tree-based pooling,
+    # the last level of the tree might not pass the threshold
+    # so whatever is leftover in the buffer could be added to the
+    # concatenated token array:
+    if flush_buffer_on_end:
+        idx += 1
+        index_map.append(idx)
+        concatenated_token_array.append(token_buffer.getvalue())
     index_map.append(-1)  # indicates the end of the array
     return concatenated_token_array, index_map
 
@@ -54,6 +62,6 @@ def sentence_concat(array: NDArray[TokenDtype]) -> (NDArray[PhraseDtype], NDArra
                 return False
 
     def _write_condition(token: TokenDtype, idx: int) -> bool:
-        return not _end_condition(token, idx)
+        return True
 
     return partial(token_concat, write_condition=_write_condition, end_condition=_end_condition)(array)

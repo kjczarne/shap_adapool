@@ -20,6 +20,7 @@ rich = "^13.7.0"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "^3.0.3"
+ipykernel = "^6.29.2"
 
 [build-system]
 requires = ["poetry-core"]

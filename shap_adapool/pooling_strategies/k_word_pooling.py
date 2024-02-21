@@ -19,12 +19,10 @@ from ..plotting import save_plot
 def main():
     parser = argparse.ArgumentParser(description='Script with integer argument.')
 
-    # Add an argument 'number' that must be an integer
     parser.add_argument('k', type=int, help='k_value')
 
     args = parser.parse_args()
 
-    # Access the value of the 'number' argument
     k = args.k
     if k <= 0:
         raise ValueError("positive integer k required")

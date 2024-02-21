@@ -8,15 +8,27 @@ from typing import Callable, Iterable, Any
 from functools import reduce, partial
 from io import StringIO
 import regex_spm
+import argparse
 
 from ..initializer import init
-from ..pooler import shap_phrase_pooler, two_element_sum
-from ..token_concatenation import add_strings, kWord_concat
+from ..pooler import shap_value_pooler, two_element_sum
+from ..token_concatenation import add_strings, k_word_concat
 from ..plotting import save_plot
 
 
 def main():
-    k:int = int(input("Input the value for k: "))
+    parser = argparse.ArgumentParser(description='Script with integer argument.')
+
+    # Add an argument 'number' that must be an integer
+    parser.add_argument('k', type=int, help='k_value')
+
+    args = parser.parse_args()
+
+    # Access the value of the 'number' argument
+    k = args.k
+    if k <= 0:
+        raise ValueError("positive integer k required")
+
 
     init()
     # importing the shapley values from a pickle file to save some time
@@ -25,16 +37,17 @@ def main():
         shap_values = pickle.load(f)
 
 
-    phrases, phrase_indices = kWord_concat(shap_values.data[0], k)
+    phrases, phrase_indices = k_word_concat(shap_values.data[0], k)
 
-    values = shap_phrase_pooler(shap_values.values[0],
+    values = shap_value_pooler(shap_values.values[0],
                                phrase_indices,
-                               two_element_sum)
+                               two_element_sum, yieldLast=True)
 
     # shap.plots.text(shap_values=)
     exp = shap._explanation.Explanation(values=np.array(list(values))[None, :],  # need to add batch dimension
                                         base_values=np.array([shap_values.base_values[0]]),
                                         data=((list(phrases),)))  # a 1-element tuple
+
 
     print(exp)
     single_sample_plotting_functions = [

@@ -10,7 +10,8 @@ def two_element_sum(x, y): return x + y  # pylint: disable=multiple-statements
 def shap_value_pooler(values: NDArray[ShapValueDtype],
                       index_map: NDArray[np.int64],
                       aggregate_fn: Callable[[ShapValueDtype, ShapValueDtype], ShapValueDtype] = two_element_sum,
-                      baseline_value: int = 0):
+                      baseline_value: int = 0,
+                      yieldLast: bool = False):
     """Aggregates Shapley Values based on the index map. The index map indicates
     which tokens belong to the same sentence/phrase. The aggregator function is applied,
     between the aggregator and the subsequent token, until the index changes.
@@ -37,21 +38,8 @@ def shap_value_pooler(values: NDArray[ShapValueDtype],
     for idx, value in enumerate(values):
         agg = aggregate_fn(value, agg)
         if index_map[idx + 1] == -1:
-            break
-        if index_map[idx] != index_map[idx + 1]:
-            yield agg
-            agg = baseline_value  # reset accumulator
-
-def shap_phrase_pooler(values: NDArray[ShapValueDtype],
-                      index_map: NDArray[np.int64],
-                      aggregate_fn: Callable[[ShapValueDtype, ShapValueDtype], ShapValueDtype] = two_element_sum,
-                      baseline_value: int = 0):
-
-    agg = baseline_value
-    for idx, value in enumerate(values):
-        agg = aggregate_fn(value, agg)
-        if index_map[idx + 1] == -1:
-            yield agg
+            if yieldLast:
+                yield agg
             break
         if index_map[idx] != index_map[idx + 1]:
             yield agg

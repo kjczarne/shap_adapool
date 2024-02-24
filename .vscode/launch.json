@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "Python Debugger: Current File",
             "type": "debugpy",
@@ -13,10 +14,17 @@
             "justMyCode": false
         },
         {
-            "name": "Debug",
-            "type": "python",
+            "name": "Pooling",
+            "type": "debugpy",
             "request": "launch",
             "module": "shap_adapool.pooling_strategies.${input:strategyModule}",
+            "justMyCode": true
+        },
+        {
+            "name": "Open Canada Dataset: Class Distribution Histogram",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "shap_adapool.datasets.open_canada.class_distribution",
             "justMyCode": true
         }
     ],

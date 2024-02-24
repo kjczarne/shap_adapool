@@ -17,10 +17,15 @@ regex-spm = "^1.0.0"
 spacy = {extras = ["cuda11x"], version = "^3.7.2"}
 prettyprint = "^0.1.5"
 rich = "^13.7.0"
+poethepoet = "^0.24.4"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "^3.0.3"
+ipykernel = "^6.29.2"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poe.tasks]
+install-transformers = "pip install transformers datasets sentencepiece"

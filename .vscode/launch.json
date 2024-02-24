@@ -21,10 +21,17 @@
             "justMyCode": true
         },
         {
-            "name": "Open Canada Dataset: Class Distribution Histogram",
+            "name": "Open Canada Dataset: class distribution histogram",
             "type": "debugpy",
             "request": "launch",
             "module": "shap_adapool.datasets.open_canada.class_distribution",
+            "justMyCode": true
+        },
+        {
+            "name": "Open Canada Dataset: clean the dataset",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "shap_adapool.datasets.open_canada.cleaning",
             "justMyCode": true
         }
     ],

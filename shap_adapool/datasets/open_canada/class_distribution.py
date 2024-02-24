@@ -4,13 +4,12 @@ from pathlib import Path
 import argparse
 
 # %%
+from .get_data import get_data
 from ...initializer import init
 # %%
 
 
-def make_histogram(path: Path, figsize=(80, 5)):
-    
-    df = pd.read_csv(path, header=0)
+def make_histogram(df: pd.DataFrame, figsize=(80, 5)):
     hist = df["NAICS Sector EN"].hist(figsize=figsize)
     return hist
 
@@ -27,7 +26,8 @@ def main():
     init()
 
     path = Path(args.path)
-    hist = make_histogram(path)
+    df = get_data(path)
+    hist = make_histogram(df)
     hist.get_figure()\
         .savefig("results/naics_sector_en_histogram.png")
 

@@ -18,6 +18,7 @@ spacy = {extras = ["cuda11x"], version = "^3.7.2"}
 prettyprint = "^0.1.5"
 rich = "^13.7.0"
 poethepoet = "^0.24.4"
+toolz = "^0.12.1"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "^3.0.3"
@@ -28,4 +29,5 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poe.tasks]
-install-transformers = "pip install transformers datasets sentencepiece"
+install-pytorch = "pip install torch torchvision torchaudio"
+install-transformers = "pip install transformers datasets sentencepiece accelerate"

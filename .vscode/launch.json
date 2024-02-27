@@ -33,6 +33,13 @@
             "request": "launch",
             "module": "shap_adapool.datasets.open_canada.cleaning",
             "justMyCode": true
+        },
+        {
+            "name": "Open Canada Dataset: create HuggingFace dataset",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "shap_adapool.datasets.open_canada.hf_dataset",
+            "justMyCode": true
         }
     ],
     "inputs": [

@@ -1,5 +1,5 @@
 import pandas as pd
-from datasets import Dataset
+from datasets import Dataset, DatasetDict
 from toolz import pipe, compose_left
 from .get_data import get_data
 
@@ -54,6 +54,16 @@ def create_hf_dataset(df: pd.DataFrame) -> Dataset:
               remove_naics_categorical_column,
               rename_text_input_column)(df)
     return hf_dataset_from_pandas(df)
+
+
+def train_val_test_split(dataset: Dataset, test_size: float = 0.1, val_size: float = 0.1) -> DatasetDict:
+    """Split the dataset into training, validation, and test sets"""
+    train_test_and_val = dataset.train_test_split(test_size=test_size + val_size)
+    train = train_test_and_val["train"]
+    test_and_val = train_test_and_val["test"].train_test_split(test_size=(val_size / (test_size + val_size)))
+    val = test_and_val["train"]
+    test = test_and_val["test"]
+    return DatasetDict(train=train, val=val, test=test)
 
 
 def main():

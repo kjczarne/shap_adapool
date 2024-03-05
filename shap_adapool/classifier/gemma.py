@@ -35,7 +35,9 @@ def fine_tune(model, tokenizer, dataset: Dataset):
 
     def tokenize(dataset: Dataset):
         return tokenizer(dataset["text"],
-                         truncation=True)
+                         truncation=True,
+                         padding="max_length",
+                         max_length=200)
 
     split_dataset = train_val_test_split(dataset)
 

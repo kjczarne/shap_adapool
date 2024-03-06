@@ -68,7 +68,7 @@ def fine_tune(model, tokenizer, dataset: Dataset, with_lora: bool = True):
     def tokenize(dataset: Dataset):
         return tokenizer(dataset["text"],
                          truncation=True,
-                         max_length=250,
+                         max_length=260,
                          padding="max_length")
 
     split_dataset = train_val_test_split(dataset)

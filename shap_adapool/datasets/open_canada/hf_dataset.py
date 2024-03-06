@@ -1,7 +1,16 @@
 import pandas as pd
 from datasets import Dataset, DatasetDict
 from toolz import pipe, compose_left
+from functools import partial
+from typing import List
 from .get_data import get_data
+
+TOP_CLASSES = [
+    "Professional, scientific and technical services",
+    "Manufacturing",
+    "Information and cultural industries",
+    "Wholesale trade"
+]
 
 
 def hf_dataset_from_pandas(df: pd.DataFrame) -> Dataset:
@@ -29,7 +38,7 @@ def naics_sector_to_numerical_id(df: pd.DataFrame) -> pd.DataFrame:
     # copy is needed to suppress `SettingWithCopyWarning`
     df_ = df.copy(deep=True)
     df_["NAICS Sector EN"] = pd.Categorical(df_["NAICS Sector EN"])
-    df_["label"] = df_["NAICS Sector EN"].cat.codes
+    df_["labels"] = df_["NAICS Sector EN"].cat.codes
     return df_
 
 
@@ -44,12 +53,18 @@ def rename_text_input_column(df: pd.DataFrame) -> pd.DataFrame:
     return df.rename(columns={"Description (English)": "text"})
 
 
-def create_hf_dataset(df: pd.DataFrame) -> Dataset:
+def reduce_to_top_classes(df: pd.DataFrame, top_classes: List[str]) -> pd.DataFrame:
+    df_ = df[df["NAICS Sector EN"].isin(top_classes)]
+    return df_
+
+
+def create_hf_dataset(df: pd.DataFrame, top_classes: List[str]) -> Dataset:
     """Applies a pipeline of transformations necessary for obtaining a
     Hugging Face dataset from a pandas DataFrame for the
     Open Canada dataset."""
     df = compose_left(
               reduce_columns,
+              partial(reduce_to_top_classes, top_classes=top_classes),
               naics_sector_to_numerical_id,
               remove_naics_categorical_column,
               rename_text_input_column)(df)
@@ -68,7 +83,7 @@ def train_val_test_split(dataset: Dataset, test_size: float = 0.1, val_size: flo
 
 def main():
     df = get_data()
-    dataset = create_hf_dataset(df)
+    dataset = create_hf_dataset(df, TOP_CLASSES)
     print(dataset)
 
 

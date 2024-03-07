@@ -41,10 +41,10 @@
             "justMyCode": true
         },
         {
-            "name": "Open Canada Dataset: fine-tune Gemma",
+            "name": "Open Canada Dataset: fine-tune Mistral",
             "type": "debugpy",
             "request": "launch",
-            "module": "shap_adapool.classifier.gemma",
+            "module": "shap_adapool.classifier.mistral",
             "justMyCode": true
         }
     ],

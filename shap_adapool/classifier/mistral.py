@@ -4,6 +4,7 @@ from torch.nn import functional as F
 from torch import nn
 from pathlib import Path
 from datetime import datetime
+from typing import Callable
 from transformers import (AutoTokenizer,
                           AutoModelForCausalLM,
                           BitsAndBytesConfig,
@@ -13,8 +14,10 @@ from transformers import (AutoTokenizer,
                           Trainer,
                           DataCollatorWithPadding)
 import evaluate
-from datasets import Dataset
+from datasets import Dataset, DatasetDict
 from peft import LoraConfig, get_peft_model
+from rich.console import Console
+from functools import partial
 # from trl import SFTTrainer
 
 from ..datasets.open_canada.hf_dataset import create_hf_dataset, train_val_test_split, TOP_CLASSES
@@ -56,28 +59,33 @@ class MulticlassTextClassificationTrainer(Trainer):
         if logits.shape != inputs["input_ids"].shape:
             # assuming that if the shapes don't match,
             # the labels are not hot-encoded on input
-            labels = F.one_hot(labels, num_classes=self.model.config.num_labels)
+            labels = F.one_hot(labels, num_classes=self.model.config.num_labels)  # pylint: disable=E1102
 
         loss = F.binary_cross_entropy_with_logits(logits,
                                                 labels.to(torch.float32))
         return (loss, outputs) if return_outputs else loss
 
+def prepare_dataset_splits(dataset: Dataset) -> DatasetDict:
+    return train_val_test_split(dataset)
 
-def fine_tune(model, tokenizer, dataset: Dataset, with_lora: bool = True):
 
-    def tokenize(dataset: Dataset):
-        return tokenizer(dataset["text"],
-                         truncation=True,
-                         max_length=260,
-                         padding="max_length")
+def tokenize(dataset: Dataset, tokenizer: AutoTokenizer) -> Dataset:
+    return tokenizer(dataset["text"],
+                     truncation=True,
+                     max_length=260,
+                     padding="max_length")
 
-    split_dataset = train_val_test_split(dataset)
 
-    tokenized_dataset = split_dataset.map(tokenize, batched=True)
+def fine_tune(model,
+              tokenizer,
+              tokenized_train_dataset: Dataset,
+              tokenized_val_dataset: Dataset,
+              with_lora: bool = True):
+
 
     collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
-    compute_metrics = make_metrics_func(split_dataset)
+    compute_metrics = make_metrics_func(tokenized_train_dataset)
 
     model_save_dir = Path("results/model")
 
@@ -88,30 +96,29 @@ def fine_tune(model, tokenizer, dataset: Dataset, with_lora: bool = True):
 
     trainer = MulticlassTextClassificationTrainer(
         model=model,
-        train_dataset=tokenized_dataset["train"],
-        eval_dataset=tokenized_dataset["val"],
+        train_dataset=tokenized_train_dataset,
+        eval_dataset=tokenized_val_dataset,
         compute_metrics=compute_metrics,
         args=TrainingArguments(
             output_dir=model_save_dir,
             warmup_steps=1,
             per_device_train_batch_size=2,
             gradient_accumulation_steps=1,
-            # gradient_checkpointing=True,
+            # gradient_checkpointing=True,  # IMPORTANT: with gradient checkpointing, backprop did not seem to work!
             max_steps=500,
-            learning_rate=2.5e-5, # Want a small lr for finetuning
+            learning_rate=2.5e-5,           # lr for finetuning
             bf16=True,
             optim="paged_adamw_8bit",
-            logging_steps=25,              # When to start reporting loss
-            logging_dir="./logs",        # Directory for storing logs
-            save_strategy="steps",       # Save the model checkpoint every logging step
-            save_steps=25,                # Save checkpoints every 50 steps
-            evaluation_strategy="steps", # Evaluate the model every logging step
-            eval_steps=25,               # Evaluate and save checkpoints every 50 steps
-            do_eval=True,                # Perform evaluation at the end of training
-            # report_to="wandb",           # Comment this out if you don't want to use weights & baises
+            logging_steps=25,               # Logging interval
+            logging_dir="./logs",           # Directory for storing logs
+            save_strategy="steps",          # Save the model checkpoint every logging step
+            save_steps=25,                  # Save checkpoints every N steps
+            evaluation_strategy="steps",    # Evaluate the model every logging step
+            eval_steps=25,                  # Evaluate and save checkpoints every 50 steps
+            do_eval=True,                   # Perform evaluation at the end of training
+            # report_to="wandb",            # Comment this out if you don't want to use weights & baises
             run_name=f"{run_name}-{datetime.now().strftime('%Y-%m-%d-%H-%M')}"          # Name of the W&B run (optional)
         ),
-        # data_collator=transformers.DataCollatorForLanguageModeling(tokenizer, mlm=False),
         data_collator=collator
     )
     trainer.train()
@@ -119,7 +126,7 @@ def fine_tune(model, tokenizer, dataset: Dataset, with_lora: bool = True):
     return model, tokenizer
 
 
-def test(model, tokenizer):
+def one_sentence_test(model, tokenizer):
     text1 = """This company is a producer of processed food items such as canned legumes,
 canned vegetables, and canned fruits. It is headquartered in the United States."""
     encoded_input = tokenizer(text1, return_tensors='pt')
@@ -132,9 +139,32 @@ canned vegetables, and canned fruits. It is headquartered in the United States."
     print(softmax_output)
 
 
+def test(model, tokenized_test_dataset: Dataset):
+    predicted = []
+    gt = []
+    console = Console()
+    for sample in tokenized_test_dataset:
+        device = "cuda:0"
+        input_ids = torch.tensor(sample['input_ids']).unsqueeze(dim=0).to(device)
+        attn_mask = torch.tensor(sample['attention_mask']).unsqueeze(dim=0).to(device)
+        output = model(input_ids=input_ids, attention_mask=attn_mask)
+
+        softmax_output = nn.Softmax(dim=-1)(output.logits)
+        y_pred = torch.argmax(softmax_output, dim=-1)
+        y_gt = torch.tensor(sample['labels']).unsqueeze(dim=0).to(device)
+        console.print(f"Predicted: {y_pred}, Ground truth: {y_gt}\n")
+        predicted.append(y_pred)
+        gt.append(y_gt)
+
+    predicted = torch.cat(predicted, dim=0)
+    gt = torch.cat(gt, dim=0)
+    acc = (predicted == gt).sum().item() / len(gt)
+    console.print(f"Test (holdout) set accuracy: {acc}")
+
+
 def main():
+    console = Console()
     num_labels = 4
-    # model_id = "google/gemma-7b"
     model_id = "mistralai/Mistral-7B-v0.1"
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,
@@ -149,10 +179,6 @@ def main():
                                                device_map={"":0},
                                                num_labels=num_labels,
                                                trust_remote_code=True)
-    # model = AutoModelForCausalLM.from_pretrained(model_id,
-    #                                              quantization_config=bnb_config,
-    #                                              device_map={"":0},
-    #                                              trust_remote_code=True)
 
     # We need to explicitly set the padding token, one way to do this is to set it to EOS token:
     tokenizer.pad_token = tokenizer.eos_token
@@ -162,9 +188,16 @@ def main():
     # It's kind of disgusting, the code above, I really hate it
 
     df = get_data()
+
     hf_dataset = create_hf_dataset(df, TOP_CLASSES)
-    model = fine_tune(model, tokenizer, hf_dataset)
-    test(model, tokenizer)
+    split_dataset = prepare_dataset_splits(hf_dataset)
+    tokenized_dataset = split_dataset.map(partial(tokenize, tokenizer=tokenizer), batched=True)
+
+    model, tokenizer = fine_tune(model, tokenizer, tokenized_dataset["train"], tokenized_dataset["val"])
+
+    console.print("[green][bold]Fine-tuning complete[/bold][/green]")
+
+    test(model, tokenized_dataset["test"])
     print("Done")
 
 

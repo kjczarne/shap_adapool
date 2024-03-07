@@ -20,8 +20,8 @@ from rich.console import Console
 from functools import partial
 # from trl import SFTTrainer
 
-from ..datasets.open_canada.hf_dataset import create_hf_dataset, train_val_test_split, TOP_CLASSES
-from ..datasets.open_canada.get_data import get_data
+from ...datasets.open_canada.hf_dataset import create_hf_dataset, train_val_test_split, TOP_CLASSES
+from ...datasets.open_canada.get_data import get_data
 
 # TODO: import `init()`
 

@@ -20,6 +20,7 @@ from rich.console import Console
 from functools import partial
 # from trl import SFTTrainer
 
+from .init import set_up_model_and_tokenizer
 from ...datasets.open_canada.hf_dataset import create_hf_dataset, train_val_test_split, TOP_CLASSES
 from ...datasets.open_canada.get_data import get_data
 
@@ -165,29 +166,9 @@ def test(model, tokenized_test_dataset: Dataset):
 
 def main():
     console = Console()
-    num_labels = 4
-    model_id = "mistralai/Mistral-7B-v0.1"
-    bnb_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_use_double_quant=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16
-    )
 
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
-    model = AutoModelForSequenceClassification.from_pretrained(model_id,
-                                               quantization_config=bnb_config,
-                                               device_map={"":0},
-                                               num_labels=num_labels,
-                                               trust_remote_code=True)
-
-    # We need to explicitly set the padding token, one way to do this is to set it to EOS token:
-    tokenizer.pad_token = tokenizer.eos_token
-    tokenizer.add_eos_token = True
-    tokenizer.pad_token_id = tokenizer.eos_token_id
-    model.config.pad_token_id = tokenizer.eos_token_id
-    # It's kind of disgusting, the code above, I really hate it
-
+    model, tokenizer = set_up_model_and_tokenizer()
+ 
     df = get_data()
 
     hf_dataset = create_hf_dataset(df, TOP_CLASSES)

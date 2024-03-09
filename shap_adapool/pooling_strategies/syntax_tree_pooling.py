@@ -8,7 +8,7 @@ import numpy as np
 
 from ..types import TokenDtype
 from ..initializer import init
-from ..pooler import shap_value_pooler, two_element_sum
+from ..pooler import unbatched_shap_value_pooler, two_element_sum
 from ..token_concatenation import token_concat
 from ..plotting import save_plot
 
@@ -109,10 +109,12 @@ def main():
                                        flush_buffer_on_end=True,
                                        threshold=2)
 
+    # TODO: try out the batched version of the pooler and see if the implementation can handle multiple samples
+    # TODO: try out the pooler for the multiple-output classifier, it'll be interesting to see if it works out of the box or if I need to adapt the pooler for this
     # Pool the values together aggregating using summation:
-    pooled_values = shap_value_pooler(shap_values,
-                                      index_map,
-                                      two_element_sum)
+    pooled_values = unbatched_shap_value_pooler(shap_values,
+                                                index_map,
+                                                two_element_sum)
 
     # Construct a fake `Explanation` object:
     pooled_shapley_values = np.array(list(pooled_values))

@@ -10,7 +10,7 @@ from io import StringIO
 import regex_spm
 
 from ..initializer import init
-from ..pooler import shap_value_pooler, two_element_sum
+from ..pooler import unbatched_shap_value_pooler, two_element_sum
 from ..token_concatenation import add_strings, sentence_concat
 from ..plotting import save_plot
 
@@ -26,7 +26,7 @@ def main():
 
     sentences, sentence_indices = sentence_concat(shap_values.data[0])
 
-    values = shap_value_pooler(shap_values.values[0],
+    values = unbatched_shap_value_pooler(shap_values.values[0],
                                sentence_indices,
                                two_element_sum)
 

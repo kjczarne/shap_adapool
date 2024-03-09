@@ -11,7 +11,7 @@ import regex_spm
 import argparse
 
 from ..initializer import init
-from ..pooler import shap_value_pooler, two_element_sum
+from ..pooler import unbatched_shap_value_pooler, two_element_sum
 from ..token_concatenation import add_strings, k_word_concat
 from ..plotting import save_plot
 
@@ -37,9 +37,9 @@ def main():
 
     phrases, phrase_indices = k_word_concat(shap_values.data[0], k)
 
-    values = shap_value_pooler(shap_values.values[0],
+    values = unbatched_shap_value_pooler(shap_values.values[0],
                                phrase_indices,
-                               two_element_sum, yieldLast=True)
+                               two_element_sum, yield_last=True)
 
     # shap.plots.text(shap_values=)
     exp = shap._explanation.Explanation(values=np.array(list(values))[None, :],  # need to add batch dimension

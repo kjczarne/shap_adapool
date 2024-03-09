@@ -44,8 +44,15 @@
             "name": "Open Canada Dataset: fine-tune Mistral",
             "type": "debugpy",
             "request": "launch",
-            "module": "shap_adapool.classifier.mistral",
+            "module": "shap_adapool.classifier.mistral.fine_tune",
             "justMyCode": true
+        },
+        {
+            "name": "Open Canada Dataset: explain Mistral",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "shap_adapool.classifier.mistral.explain",
+            "justMyCode": false
         }
     ],
     "inputs": [

@@ -1,16 +1,19 @@
 import spacy
+import pickle
 from spacy import displacy
 import pickle
 import shap
 from pprint import pprint
 from typing import List, Any
 import numpy as np
+from numpy.typing import NDArray
 
 from ..types import TokenDtype
 from ..initializer import init
 from ..pooler import unbatched_shap_value_pooler, two_element_sum
 from ..token_concatenation import token_concat
 from ..plotting import save_plot
+from ..datasets.open_canada.hf_dataset import load_split
 
 Node = Any
 SpaCySentence = Any
@@ -60,24 +63,19 @@ def build_token_tree_table(trees: List[SpaCySentence]):
     return tree_table
 
 
-def main():
+def pool_shapley_values(token_array: NDArray[np.str_], shap_values_for_sample: NDArray[np.float64]):
 
-    init()
-
-    # TODO: Replace this with the actual text from the Open Canada dataset
-    text = "I don’t want to talk to you no more, you empty-headed animal food trough wiper! I fart in your general direction! Your mother was a hamster and your father smelt of elderberries!"
+    # For SpaCy we need to use a string, so we recombine all the tokens:
+    doc = "".join(token_array)
 
     # The Transformer pipeline is recommended here as it produces more accurate dependency trees:
     nlp = spacy.load("en_core_web_trf")
-    doc = nlp(text)
+    doc = nlp(doc)
 
     # Demonstrating basic tree traversal:
     for sentence in doc.sents:
         root = sentence.root
         print_children(root)
-
-    # Create an array of random Shapley Values:
-    shap_values = np.random.rand(len(doc))
 
     # Build the token tree table:
     token_tree_table = build_token_tree_table(doc.sents)  
@@ -112,23 +110,45 @@ def main():
     # TODO: try out the batched version of the pooler and see if the implementation can handle multiple samples
     # TODO: try out the pooler for the multiple-output classifier, it'll be interesting to see if it works out of the box or if I need to adapt the pooler for this
     # Pool the values together aggregating using summation:
-    pooled_values = unbatched_shap_value_pooler(shap_values,
+    pooled_values = unbatched_shap_value_pooler(shap_values_for_sample,
                                                 index_map,
                                                 two_element_sum)
+    return combined, pooled_values
 
-    # Construct a fake `Explanation` object:
-    pooled_shapley_values = np.array(list(pooled_values))
-    exp = shap.Explanation(values=pooled_shapley_values[None, :],
-                           base_values=np.random.random(pooled_shapley_values.shape[0]),
-                           data=(list(combined),))
 
-    # Display the dependency tree (if running in an interactive session):
-    # displacy.serve(doc, style="dep")
+def main():
 
-    # Save the text plot:
-    plot = shap.plots.text(exp, display=False)
-    name = "syntax_tree"
-    save_plot(plot, name + "_pooling")
+    init()
+
+    max_samples = 30
+
+    with open("results/shap_values.pkl", "rb") as f:
+        shap_values = pickle.load(f)
+
+    for idx, sample in enumerate(shap_values):
+        combined, pooled_values = pool_shapley_values(sample.data, sample.values)
+        pooled_shapley_values = np.array(list(pooled_values))
+
+        # Hotfix: truncating the whitespace tokens which seem to cause a shape mismatch at plotting:
+        combined = combined[:len(pooled_shapley_values)]
+
+        # Construct a fake `Explanation` object:
+        exp = shap.Explanation(values=pooled_shapley_values[None, :],  # (batch, token, class)
+                               base_values=sample.base_values,
+                               data=(list(combined),),
+                               feature_names=sample.feature_names,
+                               output_names=sample.output_names)
+
+        # Display the dependency tree (if running in an interactive session):
+        # displacy.serve(doc, style="dep")
+
+        # Save the text plot:
+        plot = shap.plots.text(exp, display=False)
+        name = "syntax_tree"
+        save_plot(plot, name + f"_pooling_{idx}")
+
+        if idx == max_samples:
+            break
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ from .init import set_up_model_and_tokenizer
 from rich.console import Console
 from functools import partial
 from .fine_tune import prepare_dataset_splits, tokenize, test
-from ...datasets.open_canada.hf_dataset import create_hf_dataset, TOP_CLASSES
+from ...datasets.open_canada.hf_dataset import load_split
 from ...datasets.open_canada.get_data import get_data
 from ...plotting import save_plot
 
@@ -26,18 +26,16 @@ def main():
 
     # build an explainer using a token masker
     explainer = shap.Explainer(f, tokenizer)
-    df = get_data()
 
-    hf_dataset = create_hf_dataset(df, TOP_CLASSES)
-    split_dataset = prepare_dataset_splits(hf_dataset)
-    tokenized_dataset = split_dataset.map(partial(tokenize, tokenizer=tokenizer), batched=True)
+    hf_dataset = load_split()
+    tokenized_dataset = hf_dataset.map(partial(tokenize, tokenizer=tokenizer), batched=True)
     shap_values = explainer(tokenized_dataset["test"]['text'])
 
     with open("results/shap_values.pkl", "wb") as f:
         pickle.dump(shap_values, f)
 
+    # Optional: save a veeeery big original plot collection:
     # plot = shap.plots.text(shap_values, display=False)
-
     # save_plot(plot, "shap_plot_mistral")
 
     console.print("Done")

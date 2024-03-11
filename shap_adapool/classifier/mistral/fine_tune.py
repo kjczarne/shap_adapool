@@ -18,10 +18,11 @@ from datasets import Dataset, DatasetDict
 from peft import LoraConfig, get_peft_model
 from rich.console import Console
 from functools import partial
-# from trl import SFTTrainer
+from torch.utils.tensorboard import SummaryWriter
+from rich.console import Console
 
 from .init import set_up_model_and_tokenizer
-from ...datasets.open_canada.hf_dataset import create_hf_dataset, train_val_test_split, TOP_CLASSES
+from ...datasets.open_canada.hf_dataset import create_hf_dataset, train_val_test_split, TOP_CLASSES, save_split
 from ...datasets.open_canada.get_data import get_data
 
 # TODO: import `init()`
@@ -84,7 +85,6 @@ def fine_tune(model,
               tokenized_val_dataset: Dataset,
               with_lora: bool = True):
 
-
     collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
     compute_metrics = make_metrics_func(tokenized_train_dataset)
@@ -112,13 +112,14 @@ def fine_tune(model,
             bf16=True,
             optim="paged_adamw_8bit",
             logging_steps=25,               # Logging interval
-            logging_dir="./logs",           # Directory for storing logs
+            logging_dir="results/logs",     # Directory for storing logs
             save_strategy="steps",          # Save the model checkpoint every logging step
             save_steps=25,                  # Save checkpoints every N steps
             evaluation_strategy="steps",    # Evaluate the model every logging step
             eval_steps=25,                  # Evaluate and save checkpoints every 50 steps
             do_eval=True,                   # Perform evaluation at the end of training
             # report_to="wandb",            # Comment this out if you don't want to use weights & baises
+            report_to="tensorboard",        # Comment this out if you don't want to use tensorboard
             run_name=f"{run_name}-{datetime.now().strftime('%Y-%m-%d-%H-%M')}"          # Name of the W&B run (optional)
         ),
         data_collator=collator
@@ -145,6 +146,7 @@ def test(model, tokenized_test_dataset: Dataset):
     predicted = []
     gt = []
     console = Console()
+    writer = SummaryWriter("results/logs")
     for sample in tokenized_test_dataset:
         device = "cuda:0"
         input_ids = torch.tensor(sample['input_ids']).unsqueeze(dim=0).to(device)
@@ -162,6 +164,7 @@ def test(model, tokenized_test_dataset: Dataset):
     gt = torch.cat(gt, dim=0)
     acc = (predicted == gt).sum().item() / len(gt)
     console.print(f"Test (holdout) set accuracy: {acc}")
+    writer.add_scalar("Test/Accuracy", acc, 0)
 
 
 def main():
@@ -173,6 +176,9 @@ def main():
 
     hf_dataset = create_hf_dataset(df, TOP_CLASSES)
     split_dataset = prepare_dataset_splits(hf_dataset)
+
+    save_split(split_dataset)
+
     tokenized_dataset = split_dataset.map(partial(tokenize, tokenizer=tokenizer), batched=True)
 
     model, tokenizer = fine_tune(model, tokenizer, tokenized_dataset["train"], tokenized_dataset["val"])

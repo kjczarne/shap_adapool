@@ -1,8 +1,10 @@
+from pathlib import Path
 import pandas as pd
 from datasets import Dataset, DatasetDict
 from toolz import pipe, compose_left
 from functools import partial
 from typing import List
+
 from .get_data import get_data
 
 TOP_CLASSES = [
@@ -11,6 +13,8 @@ TOP_CLASSES = [
     "Information and cultural industries",
     "Wholesale trade"
 ]
+
+DATASET_OUTPATH_DEFAULT = Path("results/hf_dataset")
 
 
 def hf_dataset_from_pandas(df: pd.DataFrame) -> Dataset:
@@ -33,12 +37,15 @@ def naics_sector_to_one_hot(df: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([df, one_hot], axis=1)
 
 
-def naics_sector_to_numerical_id(df: pd.DataFrame) -> pd.DataFrame:
+def naics_sector_to_numerical_id(df: pd.DataFrame,
+                                 mapping_save_path: Path = Path("results/naics_labels.csv")) -> pd.DataFrame:
     """Convert the NAICS Sector ID to a numerical ID"""
     # copy is needed to suppress `SettingWithCopyWarning`
     df_ = df.copy(deep=True)
     df_["NAICS Sector EN"] = pd.Categorical(df_["NAICS Sector EN"])
     df_["labels"] = df_["NAICS Sector EN"].cat.codes
+    # saving a mapping so that we know which label corresponds to which NAICS Sector:
+    df_[["NAICS Sector EN", "labels"]].drop_duplicates().to_csv(mapping_save_path, index=False)
     return df_
 
 
@@ -79,6 +86,17 @@ def train_val_test_split(dataset: Dataset, test_size: float = 0.1, val_size: flo
     val = test_and_val["train"]
     test = test_and_val["test"]
     return DatasetDict(train=train, val=val, test=test)
+
+
+def save_split(dataset_dict: DatasetDict,
+               path: Path = DATASET_OUTPATH_DEFAULT) -> None:
+    """Save the split datasets to disk"""
+    dataset_dict.save_to_disk(path)
+
+
+def load_split(path: Path = DATASET_OUTPATH_DEFAULT) -> DatasetDict:
+    """Load the split datasets from disk"""
+    return DatasetDict.load_from_disk(path)
 
 
 def main():

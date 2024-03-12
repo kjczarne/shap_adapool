@@ -2,6 +2,7 @@ import argparse
 import pandas as pd
 from pathlib import Path
 from .get_data import get_data
+from .data_source import DATASET_PATH, CLEAN_DATASET_PATH
 
 
 def clean_df(df: pd.DataFrame) -> pd.DataFrame:
@@ -29,11 +30,11 @@ def main():
     parser.add_argument("--path",
                         type=str,
                         help="Path to the Open Canada dataset CSV file.",
-                        default="2023_24_grants_and_contributions.csv")
+                        default=DATASET_PATH)
     parser.add_argument("--output",
                         type=str,
                         help="Path to the output CSV file.",
-                        default="results/open_canada.csv")
+                        default=CLEAN_DATASET_PATH)
     args = parser.parse_args()
 
     path = Path(args.path)

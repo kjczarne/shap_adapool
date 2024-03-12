@@ -34,3 +34,4 @@ build-backend = "poetry.core.masonry.api"
 [tool.poe.tasks]
 install-pytorch = "pip install torch torchvision torchaudio"
 install-transformers = "pip install transformers datasets sentencepiece accelerate evaluate"
+tar-plots = "tar -cf plots.tar shap_plot_syntax_tree_pooling_*"

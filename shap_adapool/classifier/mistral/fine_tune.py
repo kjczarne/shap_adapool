@@ -64,8 +64,11 @@ class MulticlassTextClassificationTrainer(Trainer):
             labels = F.one_hot(labels, num_classes=self.model.config.num_labels)  # pylint: disable=E1102
 
         pred_classes = nn.Softmax(dim=-1)(logits)
-        loss = F.cross_entropy(pred_classes,
-                               labels.to(torch.float32))
+        # loss = F.cross_entropy(pred_classes,
+        #                        labels.to(torch.float32))
+        loss = F.binary_cross_entropy_with_logits(logits,
+                                                  labels.to(torch.float32))
+
         return (loss, outputs) if return_outputs else loss
 
 def prepare_dataset_splits(dataset: Dataset) -> DatasetDict:

@@ -8,7 +8,7 @@ from transformers import (AutoTokenizer,
 
 
 def set_up_model_and_tokenizer(model_id="mistralai/Mistral-7B-v0.1",
-                               num_labels=4,
+                               num_labels=3,
                                checkpoint: str | Path | None = None):
     console = Console()
     bnb_config = BitsAndBytesConfig(

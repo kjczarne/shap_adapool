@@ -17,7 +17,7 @@
             "type": "debugpy",
             "request": "launch",
             "module": "shap_adapool.pooling_strategies.${input:strategyModule}",
-            "justMyCode": true
+            "justMyCode": false
         },
         {
             "name": "Open Canada Dataset: class distribution histogram",
@@ -31,6 +31,16 @@
             "type": "debugpy",
             "request": "launch",
             "module": "shap_adapool.datasets.open_canada.cleaning",
+            "justMyCode": true
+        },
+        {
+            "name": "Open Canada Dataset: post-cleaning class distribution histogram",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "shap_adapool.datasets.open_canada.class_distribution",
+            "args": [
+                "--post-cleaning"
+            ],
             "justMyCode": true
         },
         {
@@ -66,6 +76,6 @@
                 "syntax_tree_pooling"
             ],
             "default": "foo"
-        }
+        },
     ]
 }

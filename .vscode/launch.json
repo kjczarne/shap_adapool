@@ -53,6 +53,43 @@
             "request": "launch",
             "module": "shap_adapool.classifier.mistral.explain",
             "justMyCode": false
+        },
+        {
+            "name": "AG News Dataset: class distribution histogram",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "shap_adapool.datasets.ag_news.class_distribution",
+            "justMyCode": true
+        },
+        {
+            "name": "AG News Dataset: clean the dataset",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "shap_adapool.datasets.ag_news.cleaning",
+            "justMyCode": true
+        },
+        {
+            "name": "AG News Dataset: create HuggingFace dataset",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "shap_adapool.datasets.ag_news.hf_dataset",
+            "justMyCode": true
+        },
+        {
+            "name": "AG News Dataset: fine-tune Mistral",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "shap_adapool.classifier.mistral.fine_tune",
+            "args": ["--dataset", "ag_news"],
+            "justMyCode": true
+        },
+        {
+            "name": "AG News Dataset: explain Mistral",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "shap_adapool.classifier.mistral.explain",
+            "args": ["--dataset", "ag_news"],
+            "justMyCode": false
         }
     ],
     "inputs": [

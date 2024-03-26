@@ -26,7 +26,7 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Creates a histogram for the Open Canada dataset.")
+    parser = argparse.ArgumentParser(description="Cleans up the Open Canada Dataset")
     parser.add_argument("--path",
                         type=str,
                         help="Path to the Open Canada dataset CSV file.",

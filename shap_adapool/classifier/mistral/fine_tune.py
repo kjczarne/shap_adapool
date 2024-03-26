@@ -1,4 +1,5 @@
 import torch
+import argparse
 import numpy as np
 from torch.nn import functional as F
 from torch import nn
@@ -6,11 +7,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Callable
 from transformers import (AutoTokenizer,
-                          AutoModelForCausalLM,
-                          BitsAndBytesConfig,
-                          GemmaTokenizer,
                           TrainingArguments,
-                          AutoModelForSequenceClassification,
                           Trainer,
                           DataCollatorWithPadding)
 import evaluate
@@ -22,8 +19,11 @@ from torch.utils.tensorboard import SummaryWriter
 from rich.console import Console
 
 from .init import set_up_model_and_tokenizer
-from ...datasets.open_canada.hf_dataset import create_hf_dataset, train_val_test_split, TOP_CLASSES, save_split
+from ...datasets.open_canada.hf_dataset import create_hf_dataset, train_val_test_split, TOP_CLASSES, save_split, load_split
 from ...datasets.open_canada.get_data import get_data
+from ...datasets.ag_news.hf_dataset import create_hf_dataset as create_hf_dataset_ag
+from ...datasets.ag_news.data_source import DATASET_OUTPUT_PATH as DATASET_OUTPUT_PATH_AG
+from ...datasets.open_canada.data_source import DATASET_OUTPUT_PATH
 
 # TODO: import `init()`
 
@@ -171,20 +171,45 @@ def test(model, tokenized_test_dataset: Dataset):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--dataset", type=str,
+                        choices=["ag_news", "open_canada"],
+                        default="open_canada",
+                        help="Dataset to fine-tune with")
+    parser.add_argument("--load-splits", action="store_true",
+                        help="Whether to load back existing splits for the dataset")
+    args = parser.parse_args()
+
     console = Console()
 
     model, tokenizer = set_up_model_and_tokenizer()
  
-    df = get_data()
+    match args.dataset:
+        case "ag_news":
+            hf_dataset = create_hf_dataset_ag()
+            dataset_output_path = DATASET_OUTPUT_PATH_AG
+        case "open_canada":
+            df = get_data()
+            hf_dataset = create_hf_dataset(df, TOP_CLASSES)
+            dataset_output_path = DATASET_OUTPUT_PATH
+        case _:
+            raise ValueError(f"{args.dataset} is not a supported dataset choice!")
 
-    hf_dataset = create_hf_dataset(df, TOP_CLASSES)
-    split_dataset = prepare_dataset_splits(hf_dataset)
+    console.print(f"[blue]Loaded: {args.dataset} dataset [/blue]")
 
-    save_split(split_dataset)
+    if args.load_splits:
+        split_dataset = load_split(dataset_output_path)
+    else:
+        split_dataset = prepare_dataset_splits(hf_dataset)
+        save_split(split_dataset, dataset_output_path)
 
-    tokenized_dataset = split_dataset.map(partial(tokenize, tokenizer=tokenizer), batched=True)
+    tokenized_dataset = split_dataset.map(partial(tokenize, tokenizer=tokenizer),
+                                          batched=True)
 
-    model, tokenizer = fine_tune(model, tokenizer, tokenized_dataset["train"], tokenized_dataset["val"])
+    model, tokenizer = fine_tune(model,
+                                 tokenizer,
+                                 tokenized_dataset["train"],
+                                 tokenized_dataset["val"])
 
     console.print("[green][bold]Fine-tuning complete[/bold][/green]")
 

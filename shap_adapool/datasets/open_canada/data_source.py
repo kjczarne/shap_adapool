@@ -9,3 +9,4 @@ DATASET_PATHS = (
     Path("2018_19_grants_and_contributions.csv")
 )
 CLEAN_DATASET_PATH = Path("results/open_canada.csv")
+DATASET_OUTPUT_PATH = Path("results/open_canada_dataset")

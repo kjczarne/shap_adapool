@@ -59,8 +59,8 @@ def main():
         pickle.dump(shap_values, f)
 
     # Optional: save a veeeery big original plot collection:
-    # plot = shap.plots.text(shap_values, display=False)
-    # save_plot(plot, "shap_plot_mistral")
+    plot = shap.plots.text(shap_values, display=False)
+    save_plot(plot, "shap_plot_mistral")
 
     console.print("Done")
 

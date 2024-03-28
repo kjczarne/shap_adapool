@@ -25,8 +25,12 @@ def set_up_model_and_tokenizer(model_id="mistralai/Mistral-7B-v0.1",
                                                num_labels=num_labels,
                                                trust_remote_code=True)
 
+    console.print(f"[green]Using model: {model_id}[/green]")
     if checkpoint is not None:
+        console.print(f"[green]Loading model from checkpoint: {checkpoint}[/green]")
         model = PeftModel.from_pretrained(model, checkpoint)
+    else:
+        console.print("[green]No checkpoint provided, using model from Hugging Face[/green]")
 
     # We need to explicitly set the padding token, one way to do this is to set it to EOS token:
     tokenizer.pad_token = tokenizer.eos_token

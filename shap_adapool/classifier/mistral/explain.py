@@ -22,6 +22,10 @@ def main():
                         type=str,
                         choices=["ag_news", "open_canada"],
                         help="Dataset to run the explainer for")
+    parser.add_argument("-l", "--limit",
+                        type=int,
+                        help="Max number of the samples to be explained",
+                        default=-1)
     args = parser.parse_args()
 
     console = Console()
@@ -43,7 +47,13 @@ def main():
             hf_dataset = load_split(DATASET_OUTPUT_PATH)
 
     tokenized_dataset = hf_dataset.map(partial(tokenize, tokenizer=tokenizer), batched=True)
-    shap_values = explainer(tokenized_dataset["test"]['text'])
+
+    if args.limit > 0:
+        tokenized_dataset_to_explain = tokenized_dataset["test"].select(range(args.limit))
+    else:
+        tokenized_dataset_to_explain = tokenized_dataset["test"]
+
+    shap_values = explainer(tokenized_dataset_to_explain['text'])
 
     with open("results/shap_values.pkl", "wb") as f:
         pickle.dump(shap_values, f)

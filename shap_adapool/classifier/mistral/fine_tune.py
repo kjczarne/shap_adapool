@@ -53,7 +53,10 @@ class MulticlassTextClassificationTrainer(Trainer):
     
     # overload loss calculation method from the original `Trainer` class:
     def compute_loss(self, model, inputs, return_outputs=False):
-        labels = inputs.pop("labels")
+        try:
+            labels = inputs.pop("labels")
+        except KeyError:
+            labels = inputs.pop("label")
 
         outputs = model(**inputs)
         logits = outputs.get("logits")
@@ -158,7 +161,7 @@ def test(model, tokenized_test_dataset: Dataset):
 
         softmax_output = nn.Softmax(dim=-1)(output.logits)
         y_pred = torch.argmax(softmax_output, dim=-1)
-        y_gt = torch.tensor(sample['labels']).unsqueeze(dim=0).to(device)
+        y_gt = torch.tensor(sample['label']).unsqueeze(dim=0).to(device)
         console.print(f"Predicted: {y_pred}, Ground truth: {y_gt}\n")
         predicted.append(y_pred)
         gt.append(y_gt)
@@ -182,16 +185,16 @@ def main():
 
     console = Console()
 
-    model, tokenizer = set_up_model_and_tokenizer()
- 
     match args.dataset:
         case "ag_news":
             hf_dataset = create_hf_dataset_ag()
             dataset_output_path = DATASET_OUTPUT_PATH_AG
+            model, tokenizer = set_up_model_and_tokenizer(num_labels=4)
         case "open_canada":
             df = get_data()
             hf_dataset = create_hf_dataset(df, TOP_CLASSES)
             dataset_output_path = DATASET_OUTPUT_PATH
+            model, tokenizer = set_up_model_and_tokenizer(num_labels=3)
         case _:
             raise ValueError(f"{args.dataset} is not a supported dataset choice!")
 

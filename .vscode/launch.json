@@ -62,6 +62,7 @@
             "type": "debugpy",
             "request": "launch",
             "module": "shap_adapool.classifier.mistral.explain",
+            "args": ["--limit", "100"],
             "justMyCode": false
         },
         {
@@ -91,14 +92,14 @@
             "request": "launch",
             "module": "shap_adapool.classifier.mistral.fine_tune",
             "args": ["--dataset", "ag_news"],
-            "justMyCode": true
+            "justMyCode": false
         },
         {
             "name": "AG News Dataset: explain Mistral",
             "type": "debugpy",
             "request": "launch",
             "module": "shap_adapool.classifier.mistral.explain",
-            "args": ["--dataset", "ag_news"],
+            "args": ["--dataset", "ag_news", "--limit", "100"],
             "justMyCode": false
         }
     ],

@@ -7,6 +7,7 @@ from typing import List
 from rich.console import Console
 
 from .get_data import get_data
+from ..common import hf_dataset_from_pandas
 
 TOP_CLASSES = [
     "Professional, scientific and technical services",
@@ -16,10 +17,6 @@ TOP_CLASSES = [
 ]
 
 DATASET_OUTPATH_DEFAULT = Path("results/hf_dataset")
-
-
-def hf_dataset_from_pandas(df: pd.DataFrame) -> Dataset:
-    return Dataset.from_pandas(df)
 
 
 def reduce_columns(df: pd.DataFrame) -> pd.DataFrame:

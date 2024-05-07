@@ -13,7 +13,7 @@ from ..initializer import init
 from ..pooler import unbatched_shap_value_pooler, two_element_sum
 from ..token_concatenation import token_concat
 from ..plotting import save_plot
-from ..datasets.open_canada.hf_dataset import load_split
+from ..datasets.split import load_split
 
 Node = Any
 SpaCySentence = Any

@@ -19,11 +19,12 @@ from torch.utils.tensorboard import SummaryWriter
 from rich.console import Console
 
 from .init import set_up_model_and_tokenizer
-from ...datasets.open_canada.hf_dataset import create_hf_dataset, train_val_test_split, TOP_CLASSES, save_split, load_split
+from ...datasets.open_canada.hf_dataset import create_hf_dataset, train_val_test_split, TOP_CLASSES
 from ...datasets.open_canada.get_data import get_data
 from ...datasets.ag_news.hf_dataset import create_hf_dataset as create_hf_dataset_ag
 from ...datasets.ag_news.data_source import DATASET_OUTPUT_PATH as DATASET_OUTPUT_PATH_AG
 from ...datasets.open_canada.data_source import DATASET_OUTPUT_PATH
+from ...datasets.split import save_split, load_split
 
 # TODO: import `init()`
 

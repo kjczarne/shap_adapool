@@ -6,7 +6,7 @@ from ..common import hf_dataset_from_pandas
 
 
 def create_hf_dataset(df: pd.DataFrame) -> Dataset:
-    hf_dataset_from_pandas(df)
+    return hf_dataset_from_pandas(df)
 
 
 def main():

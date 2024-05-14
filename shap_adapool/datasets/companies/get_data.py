@@ -10,4 +10,4 @@ def get_data(path: Path = CLEAN_DATASET_PATH) -> pd.DataFrame:
 
 def get_raw_data(path: Path = DATASET_PATH) -> pd.DataFrame:
     """Loads the Companies dataset from a CSV file."""
-    return pd.read_csv(path, header=0)
+    return pd.read_csv(path, header=0, encoding="ISO-8859-1")

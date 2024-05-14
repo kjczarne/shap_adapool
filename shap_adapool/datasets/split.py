@@ -28,11 +28,11 @@ def train_val_test_split(dataset: Dataset | DatasetDict,
         test = test_and_val["test"]
         return DatasetDict(train=train, val=val, test=test)
     else:
-        raise ValueError("Dataset must be of type Dataset or DatasetDict.")
+        raise ValueError(f"Dataset must be of type Dataset or DatasetDict, got {type(dataset)}")
 
 def save_split(dataset_dict: DatasetDict, path: Path) -> None:
     """Save the split datasets to disk"""
-    dataset_dict.save_to_disk(path)
+    dataset_dict.save_to_disk(str(path))
 
 
 def load_split(path: Path) -> DatasetDict:

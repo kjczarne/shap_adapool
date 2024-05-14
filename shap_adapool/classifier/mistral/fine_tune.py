@@ -19,11 +19,19 @@ from torch.utils.tensorboard import SummaryWriter
 from rich.console import Console
 
 from .init import set_up_model_and_tokenizer
-from ...datasets.open_canada.hf_dataset import create_hf_dataset, train_val_test_split, TOP_CLASSES
+from ...datasets.split import train_val_test_split
+
+from ...datasets.open_canada.hf_dataset import create_hf_dataset, TOP_CLASSES
 from ...datasets.open_canada.get_data import get_data
+from ...datasets.open_canada.data_source import DATASET_OUTPUT_PATH
+
 from ...datasets.ag_news.hf_dataset import create_hf_dataset as create_hf_dataset_ag
 from ...datasets.ag_news.data_source import DATASET_OUTPUT_PATH as DATASET_OUTPUT_PATH_AG
-from ...datasets.open_canada.data_source import DATASET_OUTPUT_PATH
+
+from ...datasets.companies.hf_dataset import create_hf_dataset as create_hf_dataset_cmp
+from ...datasets.companies.get_data import get_data as get_data_cmp
+from ...datasets.companies.data_source import DATASET_OUTPUT_PATH as DATASET_OUTPUT_PATH_CMP
+
 from ...datasets.split import save_split, load_split
 
 # TODO: import `init()`
@@ -79,10 +87,13 @@ def prepare_dataset_splits(dataset: Dataset) -> DatasetDict:
     return train_val_test_split(dataset)
 
 
-def tokenize(dataset: Dataset, tokenizer: AutoTokenizer) -> Dataset:
-    return tokenizer(dataset["text"],
+def tokenize(dataset: Dataset,
+             tokenizer: AutoTokenizer,
+             text_column_name: str = "text",
+             max_length: int = 2000) -> Dataset:
+    return tokenizer(dataset[text_column_name],
                      truncation=True,
-                     max_length=260,
+                     max_length=max_length,
                      padding="max_length")
 
 
@@ -177,7 +188,7 @@ def test(model, tokenized_test_dataset: Dataset):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dataset", type=str,
-                        choices=["ag_news", "open_canada"],
+                        choices=["ag_news", "open_canada", "companies"],
                         default="open_canada",
                         help="Dataset to fine-tune with")
     parser.add_argument("--load-splits", action="store_true",
@@ -191,11 +202,20 @@ def main():
             hf_dataset = create_hf_dataset_ag()
             dataset_output_path = DATASET_OUTPUT_PATH_AG
             model, tokenizer = set_up_model_and_tokenizer(num_labels=4)
+            text_column_name = "text"
         case "open_canada":
             df = get_data()
             hf_dataset = create_hf_dataset(df, TOP_CLASSES)
             dataset_output_path = DATASET_OUTPUT_PATH
             model, tokenizer = set_up_model_and_tokenizer(num_labels=3)
+            text_column_name = "text"
+        case "companies":
+            df = get_data_cmp()
+            hf_dataset = create_hf_dataset_cmp(df)
+            dataset_output_path = DATASET_OUTPUT_PATH_CMP
+            model, tokenizer = set_up_model_and_tokenizer(model_id=r"F:\irap\huggingface\hub\models--mistralai--Mistral-7B-v0.1\snapshots\26bca36bde8333b5d7f72e9ed20ccda6a618af24",
+                                                          num_labels=2)
+            text_column_name = "NoteText"
         case _:
             raise ValueError(f"{args.dataset} is not a supported dataset choice!")
 
@@ -207,7 +227,9 @@ def main():
         split_dataset = prepare_dataset_splits(hf_dataset)
         save_split(split_dataset, dataset_output_path)
 
-    tokenized_dataset = split_dataset.map(partial(tokenize, tokenizer=tokenizer),
+    tokenized_dataset = split_dataset.map(partial(tokenize,
+                                                  tokenizer=tokenizer,
+                                                  text_column_name=text_column_name),
                                           batched=True)
 
     model, tokenizer = fine_tune(model,

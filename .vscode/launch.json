@@ -121,7 +121,10 @@
             "type": "debugpy",
             "request": "launch",
             "module": "shap_adapool.classifier.mistral.fine_tune",
-            "args": ["--dataset", "companies"],
+            "args": [
+                "--dataset", "companies",
+                "--model-id", "mistralai/Mistral-7B-v0.1"
+            ],
             "justMyCode": false
         },
         {

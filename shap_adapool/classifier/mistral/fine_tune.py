@@ -73,7 +73,12 @@ class MulticlassTextClassificationTrainer(Trainer):
         if logits.shape != inputs["input_ids"].shape:
             # assuming that if the shapes don't match,
             # the labels are not hot-encoded on input
-            labels = F.one_hot(labels, num_classes=self.model.config.num_labels)  # pylint: disable=E1102
+            try:
+                labels = F.one_hot(labels,
+                                   num_classes=self.model.config.num_labels)  # pylint: disable=E1102
+            except RuntimeError:
+                # if the labels are already one-hot encoded, skip the conversion
+                pass
 
         pred_classes = nn.Softmax(dim=-1)(logits)
         # loss = F.cross_entropy(pred_classes,
@@ -83,6 +88,7 @@ class MulticlassTextClassificationTrainer(Trainer):
 
         return (loss, outputs) if return_outputs else loss
 
+
 def prepare_dataset_splits(dataset: Dataset) -> DatasetDict:
     return train_val_test_split(dataset)
 
@@ -91,10 +97,17 @@ def tokenize(dataset: Dataset,
              tokenizer: AutoTokenizer,
              text_column_name: str = "text",
              max_length: int = 2000) -> Dataset:
-    return tokenizer(dataset[text_column_name],
-                     truncation=True,
-                     max_length=max_length,
-                     padding="max_length")
+    tokenized_dataset = tokenizer(dataset[text_column_name],
+                                  truncation=True,
+                                  max_length=max_length,
+                                  padding="max_length")
+    try:
+        label_col = dataset["label"]
+    except KeyError:
+        raise KeyError("The dataset does not contain a 'label' column!"\
+                       "Did you run the `cleaning.py` script for the dataset already?")
+    tokenized_dataset["label"] = label_col
+    return tokenized_dataset
 
 
 def fine_tune(model,
@@ -193,6 +206,9 @@ def main():
                         help="Dataset to fine-tune with")
     parser.add_argument("--load-splits", action="store_true",
                         help="Whether to load back existing splits for the dataset")
+    parser.add_argument("--model-id", type=str,
+                        help="Path to the model to fine-tune with",
+                        default=r"F:\irap\huggingface\hub\models--mistralai--Mistral-7B-v0.1\snapshots\26bca36bde8333b5d7f72e9ed20ccda6a618af24")
     args = parser.parse_args()
 
     console = Console()
@@ -213,7 +229,7 @@ def main():
             df = get_data_cmp()
             hf_dataset = create_hf_dataset_cmp(df)
             dataset_output_path = DATASET_OUTPUT_PATH_CMP
-            model, tokenizer = set_up_model_and_tokenizer(model_id=r"F:\irap\huggingface\hub\models--mistralai--Mistral-7B-v0.1\snapshots\26bca36bde8333b5d7f72e9ed20ccda6a618af24",
+            model, tokenizer = set_up_model_and_tokenizer(model_id=args.model_id,
                                                           num_labels=2)
             text_column_name = "NoteText"
         case _:

@@ -5,15 +5,14 @@ from pathlib import Path
 from typing import Tuple
 
 from .get_data import get_raw_data
-from .data_source import DATASET_PATH, CLEAN_DATASET_PATH
+from .data_source import DATASET_PATH, CLEAN_DATASET_PATH, BIN_RANGE, YEARS_RANGE
 
 
 def clean_df(df: pd.DataFrame,
-            #  revenue_bins: int | Tuple[int, ...] = (0, 10, 100, 1000),
-             revenue_bins: int | Tuple[int, ...] = (-1, 1000, np.inf),
+             revenue_bins: int | Tuple[int, ...] = BIN_RANGE,
              bin_labels: Tuple[str, str] = ("Low", "High"),
              max_revenue: None | float = None,
-             years: Tuple[int, ...] = tuple(range(2009, 2019))) -> pd.DataFrame:
+             years: Tuple[int, ...] = YEARS_RANGE) -> pd.DataFrame:
     df_ = df.copy(deep=True)
     # if the maximum revenue is unspecified, use the top revenue across all years for all samples
     max_revenue_ = max_revenue

@@ -125,6 +125,10 @@
                 "--dataset", "companies",
                 "--model-id", "mistralai/Mistral-7B-v0.1"
             ],
+            "env": {
+                "VARIANT": "public",
+                "CUDA_VISIBLE_DEVICES": "1",
+            },
             "justMyCode": false
         },
         {

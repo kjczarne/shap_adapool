@@ -79,10 +79,15 @@ class MulticlassTextClassificationTrainer(Trainer):
             except RuntimeError:
                 # if the labels are already one-hot encoded, skip the conversion
                 pass
+        
+        if labels.ndim < logits.ndim:
+            labels = labels.unsqueeze(dim=-1)
 
-        pred_classes = nn.Softmax(dim=-1)(logits)
+        # pred_classes = torch.argmax(nn.Softmax(dim=-1)(logits), dim=-1)
         # loss = F.cross_entropy(pred_classes,
-        #                        labels.to(torch.float32))
+                            #    labels.to(torch.float32))
+        # loss = nn.CrossEntropyLoss()(nn.Softmax(dim=-1)(logits),
+                                    #  labels.to(torch.long))
         loss = F.binary_cross_entropy_with_logits(logits,
                                                   labels.to(torch.float32))
 
@@ -96,7 +101,7 @@ def prepare_dataset_splits(dataset: Dataset) -> DatasetDict:
 def tokenize(dataset: Dataset,
              tokenizer: AutoTokenizer,
              text_column_name: str = "text",
-             max_length: int = 2000) -> Dataset:
+             max_length: int = 500) -> Dataset:
     tokenized_dataset = tokenizer(dataset[text_column_name],
                                   truncation=True,
                                   max_length=max_length,
@@ -230,7 +235,7 @@ def main():
             hf_dataset = create_hf_dataset_cmp(df)
             dataset_output_path = DATASET_OUTPUT_PATH_CMP
             model, tokenizer = set_up_model_and_tokenizer(model_id=args.model_id,
-                                                          num_labels=2)
+                                                          num_labels=1)
             text_column_name = "NoteText"
         case _:
             raise ValueError(f"{args.dataset} is not a supported dataset choice!")

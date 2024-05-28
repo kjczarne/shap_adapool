@@ -37,4 +37,4 @@ def save_split(dataset_dict: DatasetDict, path: Path) -> None:
 
 def load_split(path: Path) -> DatasetDict:
     """Load the split datasets from disk"""
-    return DatasetDict.load_from_disk(path)
+    return DatasetDict.load_from_disk(str(path))

@@ -139,6 +139,14 @@
             "args": ["--dataset", "companies", "--limit", "100"],
             "justMyCode": false
         },
+        {
+            "name": "Mock annotator",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "shap_adapool.classifier.mock.explain",
+            "args": ["--dataset", "open_canada", "--limit", "10"],
+            "justMyCode": false
+        },
     ],
     "inputs": [
         {

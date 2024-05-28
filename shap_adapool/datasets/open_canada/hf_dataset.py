@@ -6,7 +6,7 @@ from functools import partial
 from typing import List
 
 from .get_data import get_data
-from ..common import hf_dataset_from_pandas
+from ..common import hf_dataset_from_pandas, hf_dataset_to_disk
 
 TOP_CLASSES = [
     "Professional, scientific and technical services",
@@ -15,7 +15,7 @@ TOP_CLASSES = [
     "Wholesale trade"
 ]
 
-DATASET_OUTPATH_DEFAULT = Path("results/hf_dataset")
+DATASET_OUTPATH_DEFAULT = Path("results/open_canada_dataset")
 
 
 def reduce_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -78,6 +78,7 @@ def create_hf_dataset(df: pd.DataFrame, top_classes: List[str]) -> Dataset:
 def main():
     df = get_data()
     dataset = create_hf_dataset(df, TOP_CLASSES)
+    hf_dataset_to_disk(dataset, DATASET_OUTPATH_DEFAULT)
     print(dataset)
 
 

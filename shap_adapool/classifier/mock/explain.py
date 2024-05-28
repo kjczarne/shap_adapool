@@ -1,3 +1,4 @@
+from pathlib import Path
 import torch
 import shap
 import scipy as sp
@@ -5,7 +6,7 @@ import numpy as np
 import pickle
 import argparse
 from torch import nn
-from .init import set_up_model_and_tokenizer
+from ..mistral.init import set_up_model_and_tokenizer
 from rich.console import Console
 from functools import partial
 from .fine_tune import prepare_dataset_splits, tokenize, test
@@ -26,19 +27,14 @@ def main():
                         type=int,
                         help="Max number of the samples to be explained",
                         default=-1)
+    parser.add_argument("-o", "--output",
+                        type=str,
+                        help="Output path for the shap values",
+                        default="results/shap_values.pkl")
     args = parser.parse_args()
 
     console = Console()
-    model, tokenizer = set_up_model_and_tokenizer(checkpoint="results/model/checkpoint-500")
-
-    def f(x):
-        tv = torch.tensor([tokenizer.encode(v, padding='max_length', max_length=500, truncation=True) for v in x]).cuda()
-        outputs = model(tv)[0].detach()
-        scores = nn.Softmax(dim=-1)(outputs).detach().cpu().numpy().astype(np.float64)
-        return scores
-
-    # build an explainer using a token masker
-    explainer = shap.Explainer(f, tokenizer)
+    _, tokenizer = set_up_model_and_tokenizer(checkpoint="results/model/checkpoint-500")
 
     match args.dataset:
         case "ag_news":
@@ -53,10 +49,16 @@ def main():
     else:
         tokenized_dataset_to_explain = tokenized_dataset["test"]
 
-    shap_values = explainer(tokenized_dataset_to_explain['text'])
+    # TODO: interactively iterate over each sample in the tokenized_dataset_to_explain
+    # and annotate the tokens with their respective shap values
 
-    with open("results/shap_values.pkl", "wb") as f:
-        pickle.dump(shap_values, f)
+    exp = shap._explanation.Explanation(values=np.array(list(values))[None, :],  # need to add batch dimension
+                                        base_values=np.array([base_values[0]]),
+                                        data=((list(tokens),)))  # a 1-element tuple
+
+
+    with open(Path(args.output), "wb") as f:
+        pickle.dump(exp, f)
 
     # Optional: save a veeeery big original plot collection:
     # plot = shap.plots.text(shap_values, display=False)

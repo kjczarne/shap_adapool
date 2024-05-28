@@ -4,6 +4,10 @@ results
 # Python:
 __pycache__
 *.egg-info
+.venv
+*.whl
+t.py
+t2.py
 
 # Data:
 *.csv

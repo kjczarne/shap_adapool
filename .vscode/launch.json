@@ -143,7 +143,7 @@
             "name": "Mock annotator",
             "type": "debugpy",
             "request": "launch",
-            "module": "shap_adapool.classifier.mock.explain",
+            "module": "shap_adapool.classifier.mock.annotate",
             "args": ["--dataset", "open_canada", "--limit", "10"],
             "justMyCode": false
         },

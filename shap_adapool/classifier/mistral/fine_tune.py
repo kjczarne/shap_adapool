@@ -242,7 +242,7 @@ def main():
             hf_dataset = create_hf_dataset_cmp(df)
             dataset_output_path = DATASET_OUTPUT_PATH_CMP
             model, tokenizer = set_up_model_and_tokenizer(model_id=args.model_id,
-                                                          num_labels=1,
+                                                          num_labels=2,
                                                           checkpoint=args.load_weights)
             text_column_name = "NoteText"
         case _:

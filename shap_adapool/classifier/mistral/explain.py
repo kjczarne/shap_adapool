@@ -38,7 +38,7 @@ def main():
 
     console = Console()
     model, tokenizer = set_up_model_and_tokenizer(model_id=args.model_id,
-                                                  num_labels=1,
+                                                  num_labels=2,
                                                   checkpoint=Path(args.load_weights))
 
     def f(x):

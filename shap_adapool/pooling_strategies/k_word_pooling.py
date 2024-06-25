@@ -31,7 +31,7 @@ def main():
     init()
     # importing the shapley values from a pickle file to save some time
 
-    with open('shap.pkl', 'rb') as f:
+    with open('results/shap_values.pkl', 'rb') as f:
         shap_values = pickle.load(f)
 
 

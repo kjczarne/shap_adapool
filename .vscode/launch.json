@@ -136,8 +136,11 @@
             "type": "debugpy",
             "request": "launch",
             "module": "shap_adapool.classifier.mistral.explain",
-            "args": ["--dataset", "companies", "--limit", "100"],
-            "justMyCode": false
+            "args": ["--dataset", "companies", "--limit", "5"],
+            "justMyCode": false,
+            "env": {
+                "VARIANT": "private"
+            }
         },
     ],
     "inputs": [

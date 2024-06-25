@@ -213,7 +213,12 @@ def main():
                         help="Whether to load back existing splits for the dataset")
     parser.add_argument("--model-id", type=str,
                         help="Path to the model to fine-tune with",
-                        default=r"F:\irap\huggingface\hub\models--mistralai--Mistral-7B-v0.1\snapshots\26bca36bde8333b5d7f72e9ed20ccda6a618af24")
+                        default=r"E:\irap\huggingface\hub\models--mistralai--Mistral-7B-v0.1\snapshots\26bca36bde8333b5d7f72e9ed20ccda6a618af24")
+    parser.add_argument("--just-test", action="store_true",
+                        help="Load the model and test")
+    parser.add_argument("--load-weights", type=str,
+                        help="Path to model weigths to be loaded",
+                        default=None)
     args = parser.parse_args()
 
     console = Console()
@@ -222,20 +227,23 @@ def main():
         case "ag_news":
             hf_dataset = create_hf_dataset_ag()
             dataset_output_path = DATASET_OUTPUT_PATH_AG
-            model, tokenizer = set_up_model_and_tokenizer(num_labels=4)
+            model, tokenizer = set_up_model_and_tokenizer(num_labels=4,
+                                                          checkpoint=args.load_weights)
             text_column_name = "text"
         case "open_canada":
             df = get_data()
             hf_dataset = create_hf_dataset(df, TOP_CLASSES)
             dataset_output_path = DATASET_OUTPUT_PATH
-            model, tokenizer = set_up_model_and_tokenizer(num_labels=3)
+            model, tokenizer = set_up_model_and_tokenizer(num_labels=3,
+                                                          checkpoint=args.load_weights)
             text_column_name = "text"
         case "companies":
             df = get_data_cmp()
             hf_dataset = create_hf_dataset_cmp(df)
             dataset_output_path = DATASET_OUTPUT_PATH_CMP
             model, tokenizer = set_up_model_and_tokenizer(model_id=args.model_id,
-                                                          num_labels=1)
+                                                          num_labels=1,
+                                                          checkpoint=args.load_weights)
             text_column_name = "NoteText"
         case _:
             raise ValueError(f"{args.dataset} is not a supported dataset choice!")
@@ -253,10 +261,11 @@ def main():
                                                   text_column_name=text_column_name),
                                           batched=True)
 
-    model, tokenizer = fine_tune(model,
-                                 tokenizer,
-                                 tokenized_dataset["train"],
-                                 tokenized_dataset["val"])
+    if not args.just_test:
+        model, tokenizer = fine_tune(model,
+                                     tokenizer,
+                                     tokenized_dataset["train"],
+                                     tokenized_dataset["val"])
 
     console.print("[green][bold]Fine-tuning complete[/bold][/green]")
 
